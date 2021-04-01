@@ -1,5 +1,5 @@
 {
-    "name": "sonata-project/entity-audit-bundle",
+    "name": "hwvlapin/entity-audit-bundle",
     "type": "symfony-bundle",
     "description": "Audit for Doctrine Entities",
     "keywords": [
