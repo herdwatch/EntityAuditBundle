@@ -134,6 +134,10 @@ class LogRevisionsListener implements EventSubscriber
                 continue;
             }
 
+            $setUnion = '';
+            $params = [];
+            $types = [];
+
             foreach ($updateData[$meta->table['name']] as $column => $value) {
                 $field = $meta->getFieldName($column);
                 $fieldName = $meta->getFieldForColumn($column);
@@ -149,13 +153,12 @@ class LogRevisionsListener implements EventSubscriber
                     }
                 }
 
-                $sql = 'UPDATE '.$this->config->getTableName($meta).' '.
-                    'SET '.$field.' = '.$placeholder.' '.
-                    'WHERE '.$this->config->getRevisionFieldName().' = ? ';
+                if (!empty($setUnion)) {
+                    $setUnion .= ', ';
+                }
+                $setUnion .= $field . ' = ' . $placeholder;
 
-                $params = [$value, $this->getRevisionId()];
-
-                $types = [];
+                $params[] = $value;
 
                 if (\in_array($column, $meta->columnNames, true)) {
                     $types[] = $meta->getTypeOfField($fieldName);
@@ -180,8 +183,15 @@ class LogRevisionsListener implements EventSubscriber
 
                     $types[] = $type;
                 }
+            }
+
+            if (!empty($setUnion)) {
+                $sql = 'UPDATE ' . $this->config->getTableName($meta) . ' ' .
+                    'SET ' . $setUnion . ' ' .
+                    'WHERE ' . $this->config->getRevisionFieldName() . ' = ? ';
 
                 $types[] = $this->config->getRevisionIdFieldType();
+                $params[] = $this->getRevisionId();
 
                 foreach ($meta->identifier as $idField) {
                     if (isset($meta->fieldMappings[$idField])) {
