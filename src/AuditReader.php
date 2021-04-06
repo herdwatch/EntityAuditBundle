@@ -834,7 +834,10 @@ class AuditReader
 
         $key = implode(':', $keyParts);
 
-        if (isset($this->entityCache[$className][$key][$revision])) {
+        if (isset($this->entityCache[$className]) &&
+            isset($this->entityCache[$className][$key]) &&
+            isset($this->entityCache[$className][$key][$revision])
+        ) {
             /** @phpstan-var T $cachedEntity */
             $cachedEntity = $this->entityCache[$className][$key][$revision];
 

@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace SimpleThings\EntityAudit;
 
 use Doctrine\Common\EventManager;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use SimpleThings\EntityAudit\EventListener\CreateSchemaListener;
 use SimpleThings\EntityAudit\EventListener\LogRevisionsListener;
 use SimpleThings\EntityAudit\Metadata\MetadataFactory;
@@ -56,7 +56,7 @@ class AuditManager
      *
      * @return AuditReader
      */
-    public function createAuditReader(EntityManager $em)
+    public function createAuditReader(EntityManagerInterface $em)
     {
         return new AuditReader($em, $this->config, $this->metadataFactory);
     }
