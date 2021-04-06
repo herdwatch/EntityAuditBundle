@@ -1,5 +1,5 @@
 {
-    "name": "sonata-project/entity-audit-bundle",
+    "name": "herdwatch/entity-audit-bundle",
     "type": "symfony-bundle",
     "description": "Audit for Doctrine Entities",
     "keywords": [
