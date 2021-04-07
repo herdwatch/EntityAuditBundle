@@ -476,9 +476,8 @@ class LogRevisionsListener implements EventSubscriber
         if ($class->isInheritanceTypeSingleTable()) {
             $params[] = $class->discriminatorValue;
             $types[] = $class->discriminatorColumn['type'];
-        } elseif (
-            $class->isInheritanceTypeJoined() &&
-            $class->name === $class->rootEntityName
+        } elseif ($class->isInheritanceTypeJoined()
+            && $class->name === $class->rootEntityName
         ) {
             $params[] = $entityData[$class->discriminatorColumn['name']] ?? $class->discriminatorValue;
             $types[] = $class->discriminatorColumn['type'];
