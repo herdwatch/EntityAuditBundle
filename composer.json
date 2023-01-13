@@ -1,5 +1,5 @@
 {
-    "name": "sonata-project/entity-audit-bundle",
+    "name": "herdwatch/entity-audit-bundle",
     "description": "Audit for Doctrine Entities",
     "license": "MIT",
     "type": "symfony-bundle",

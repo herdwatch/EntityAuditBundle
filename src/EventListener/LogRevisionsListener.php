@@ -23,6 +23,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
+use Doctrine\ORM\Event\OnClearEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\QuoteStrategy;
@@ -88,7 +89,21 @@ class LogRevisionsListener implements EventSubscriber
      */
     public function getSubscribedEvents()
     {
-        return [Events::onFlush, Events::postPersist, Events::postUpdate, Events::postFlush];
+        return [
+            Events::onFlush,
+            Events::postPersist,
+            Events::postUpdate,
+            Events::postFlush,
+            Events::onClear
+        ];
+    }
+
+    public function onClear(OnClearEventArgs $args)
+    {
+        if ($args->clearsAllEntities()) {
+            $this->extraUpdates = [];
+            $this->insertRevisionSQL = [];
+        }
     }
 
     /**
@@ -113,6 +128,10 @@ class LogRevisionsListener implements EventSubscriber
                 continue;
             }
 
+            $setUnion = '';
+            $params = [];
+            $types = [];
+
             foreach ($updateData[$meta->table['name']] as $column => $value) {
                 $field = $meta->getFieldName($column);
                 $fieldName = $meta->getFieldForColumn($column);
@@ -128,13 +147,12 @@ class LogRevisionsListener implements EventSubscriber
                     }
                 }
 
-                $sql = 'UPDATE '.$this->config->getTableName($meta).' '.
-                    'SET '.$field.' = '.$placeholder.' '.
-                    'WHERE '.$this->config->getRevisionFieldName().' = ? ';
+                if (!empty($setUnion)) {
+                    $setUnion .= ', ';
+                }
+                $setUnion .= $field . ' = ' . $placeholder;
 
-                $params = [$value, $this->getRevisionId()];
-
-                $types = [];
+                $params[] = $value;
 
                 if (\array_key_exists($column, $meta->fieldNames)) {
                     $types[] = $meta->getTypeOfField($fieldName);
@@ -161,8 +179,15 @@ class LogRevisionsListener implements EventSubscriber
 
                     $types[] = $type;
                 }
+            }
+
+            if (!empty($setUnion)) {
+                $sql = 'UPDATE ' . $this->config->getTableName($meta) . ' ' .
+                    'SET ' . $setUnion . ' ' .
+                    'WHERE ' . $this->config->getRevisionFieldName() . ' = ? ';
 
                 $types[] = $this->config->getRevisionIdFieldType();
+                $params[] = $this->getRevisionId();
 
                 foreach ($meta->identifier as $idField) {
                     if (isset($meta->fieldMappings[$idField])) {
@@ -564,7 +589,7 @@ class LogRevisionsListener implements EventSubscriber
             && $class->name === $class->rootEntityName
             && null !== $class->discriminatorColumn
         ) {
-            $params[] = $entityData[$class->discriminatorColumn['name']];
+            $params[] = $entityData[$class->discriminatorColumn['name']] ?? $class->discriminatorValue;
             $types[] = $class->discriminatorColumn['type'];
         }
 
