@@ -100,7 +100,7 @@ class CreateSchemaListener implements EventSubscriber
             if (
                 $associationMapping['isOwningSide']
                 && isset($associationMapping['joinTable'])
-                && $this->metadataFactory->isAudited($associationMapping["targetEntity"])
+                && $this->metadataFactory->isAudited($associationMapping['targetEntity'])
             ) {
                 if (isset($associationMapping['joinTable']['name'])) {
                     $joinTable = $schema->getTable($associationMapping['joinTable']['name']);
