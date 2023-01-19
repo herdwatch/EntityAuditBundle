@@ -97,7 +97,11 @@ class CreateSchemaListener implements EventSubscriber
         $revisionTable->addIndex([$this->config->getRevisionFieldName()], $revIndexName);
 
         foreach ($cm->associationMappings as $associationMapping) {
-            if ($associationMapping['isOwningSide'] && isset($associationMapping['joinTable'])) {
+            if (
+                $associationMapping['isOwningSide']
+                && isset($associationMapping['joinTable'])
+                && $this->metadataFactory->isAudited($associationMapping["targetEntity"])
+            ) {
                 if (isset($associationMapping['joinTable']['name'])) {
                     $joinTable = $schema->getTable($associationMapping['joinTable']['name']);
                     $revisionJoinTable = $schema->createTable(
