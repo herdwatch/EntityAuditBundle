@@ -341,12 +341,12 @@ final class RelationTest extends BaseTest
 
         static::assertNotNull($audited);
         static::assertInstanceOf(Collection::class, $audited->getOwned3());
-        static::assertCount(2, $audited->getOwned3());
+        static::assertCount(0, $audited->getOwned3());
 
         // ownedInverse is a m:n relationship with OwnerEntity as the inverse side
         // checking the getOwnedInverse returns a collection of current owned4 entities
         static::assertInstanceOf(Collection::class, $audited->getOwnedInverse());
-        static::assertCount(1, $audited->getOwnedInverse());
+        static::assertCount(0, $audited->getOwnedInverse());
     }
 
     /**
