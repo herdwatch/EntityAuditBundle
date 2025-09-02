@@ -68,8 +68,6 @@ class LogRevisionsListener implements EventSubscriber
      */
     private array $insertJoinTableRevisionSQL = [];
 
-    private UnitOfWork $uow;
-
     private string|int|null $revisionId = null;
 
     /**
@@ -372,10 +370,7 @@ class LogRevisionsListener implements EventSubscriber
         return $data;
     }
 
-    /**
-     * @return string|int
-     */
-    private function getRevisionId()
+    private function getRevisionId(Connection $conn): string|int
     {
         $now = $this->clock instanceof ClockInterface ? $this->clock->now() : new \DateTimeImmutable();
 
