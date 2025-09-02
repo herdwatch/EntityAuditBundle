@@ -20,7 +20,8 @@
         "symfony/dependency-injection": "^6.4 || ^7.1",
         "symfony/http-kernel": "^6.4 || ^7.1",
         "symfony/security-core": "^6.4 || ^7.1",
-        "twig/twig": "^3.0"
+        "twig/twig": "^3.0",
+        "ext-pdo": "*"
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^2.7",

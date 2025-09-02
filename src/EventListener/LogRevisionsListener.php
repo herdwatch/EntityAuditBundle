@@ -264,7 +264,7 @@ class LogRevisionsListener implements EventSubscriber
         }
 
         // if we have no changes left => don't create revision log
-        if (0 === \count($changeset)) {
+        if (empty($changeset)) {
             return;
         }
 
@@ -280,6 +280,8 @@ class LogRevisionsListener implements EventSubscriber
     public function onClear(): void
     {
         $this->extraUpdates = [];
+        $this->insertRevisionSQL = [];
+        $this->insertJoinTableRevisionSQL = [];
     }
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
@@ -616,7 +618,7 @@ class LogRevisionsListener implements EventSubscriber
             && $class->name === $class->rootEntityName
             && null !== $class->discriminatorColumn
         ) {
-            $params[] = $entityData[self::getMappingNameValue($class->discriminatorColumn)];
+            $params[] = $entityData[self::getMappingNameValue($class->discriminatorColumn)] ?? $class->discriminatorValue;;
             $types[] = self::getMappingValue($class->discriminatorColumn, 'type');
         }
 
