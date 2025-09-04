@@ -280,8 +280,7 @@ class LogRevisionsListener implements EventSubscriber
     public function onClear(): void
     {
         $this->extraUpdates = [];
-        $this->insertRevisionSQL = [];
-        $this->insertJoinTableRevisionSQL = [];
+        $this->deferredChangedManyToManyEntityRevisionsToPersist = [];
     }
 
     public function onFlush(OnFlushEventArgs $eventArgs): void
