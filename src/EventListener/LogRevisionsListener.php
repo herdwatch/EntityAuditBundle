@@ -261,7 +261,7 @@ class LogRevisionsListener implements EventSubscriber
         }
 
         // if we have no changes left => don't create revision log
-        if (empty($changeset)) {
+        if (0 === \count($changeset)) {
             return;
         }
 
