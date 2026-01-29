@@ -10,6 +10,7 @@
     ],
     "require": {
         "php": ">=8.1 <8.5",
+        "ext-pdo": "*",
         "doctrine/collections": "^1.8 || ^2.0",
         "doctrine/dbal": "^3.6 || ^4.0",
         "doctrine/event-manager": "^1.2 || ^2.0",
@@ -20,8 +21,7 @@
         "symfony/dependency-injection": "^6.4 || ^7.1",
         "symfony/http-kernel": "^6.4 || ^7.1",
         "symfony/security-core": "^6.4 || ^7.1",
-        "twig/twig": "^3.0",
-        "ext-pdo": "*"
+        "twig/twig": "^3.0"
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^2.7",
