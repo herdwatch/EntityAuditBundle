@@ -842,8 +842,8 @@ class AuditReader
             && null !== $classMetadata->discriminatorColumn
         ) {
             $discriminator = $data[self::getMappingNameValue($classMetadata->discriminatorColumn)];
-            if (!isset($classMetadata->discriminatorMap[$discriminator])) {
-                throw new \RuntimeException("No mapping found for [{$discriminator}].");
+            if (null === $discriminator || !isset($classMetadata->discriminatorMap[$discriminator])) {
+                throw new \RuntimeException("No mapping found for [$discriminator].");
             }
 
             if (isset($classMetadata->discriminatorValue)) {
@@ -880,9 +880,7 @@ class AuditReader
                 $type = Type::getType(self::getMappingValue($classMetadata->fieldMappings[$field], 'type'));
                 $value = $type->convertToPHPValue($value, $this->platform);
 
-                $reflField = $classMetadata->reflFields[$field];
-                \assert(null !== $reflField);
-                $reflField->setValue($entity, $value);
+                $classMetadata->setFieldValue($entity, $field, $value);
             }
         }
 
@@ -980,9 +978,7 @@ class AuditReader
                     }
                 }
 
-                $reflField = $classMetadata->reflFields[$field];
-                \assert(null !== $reflField);
-                $reflField->setValue($entity, $value);
+                $classMetadata->setFieldValue($entity, $field, $value);
             } elseif (
                 0 !== ($assoc['type'] & ClassMetadata::ONE_TO_MANY)
                 && null !== $mappedBy
@@ -993,9 +989,7 @@ class AuditReader
                         $foreignKeys = [];
                         foreach ($targetClass->associationMappings[$mappedBy]['sourceToTargetKeyColumns'] as $local => $foreign) {
                             $field = $classMetadata->getFieldForColumn($foreign);
-                            $reflField = $classMetadata->reflFields[$field];
-                            \assert(null !== $reflField);
-                            $foreignKeys[$local] = $reflField->getValue($entity);
+                            $foreignKeys[$local] = $classMetadata->getFieldValue($entity, $field);
                         }
 
                         $collection = new AuditedCollection(
@@ -1020,20 +1014,14 @@ class AuditReader
                     }
                 }
 
-                $reflField = $classMetadata->reflFields[$assoc['fieldName']];
-                \assert(null !== $reflField);
-                $reflField->setValue($entity, $collection);
+                $classMetadata->setFieldValue($entity, $assoc['fieldName'], $collection);
             } elseif (self::isManyToMany($assoc)) {
                 if (self::isManyToManyOwningSideMapping($assoc)) {
                     $whereId = [$this->config->getRevisionFieldName().' = ?'];
                     $values = [$revision];
                     foreach (self::getRelationToSourceKeyColumns($assoc) as $sourceKeyJoinColumn => $sourceKeyColumn) {
                         $whereId[] = "{$sourceKeyJoinColumn} = ?";
-
-                        $reflField = $classMetadata->reflFields['id'];
-                        \assert(null !== $reflField);
-
-                        $values[] = $reflField->getValue($entity);
+                        $values[] = $classMetadata->getFieldValue($entity, 'id');
                     }
 
                     $whereSQL = implode(' AND ', $whereId);
@@ -1081,9 +1069,6 @@ class AuditReader
                                 }
                             }
                         } else {
-                            $reflField = $classMetadata->reflFields[$assoc['fieldName']];
-                            \assert(null !== $reflField);
-
                             if ($this->loadNativeCollections) {
                                 $collection = new PersistentCollection(
                                     $this->em,
@@ -1094,16 +1079,14 @@ class AuditReader
                                 $this->getEntityPersister($targetEntity)
                                     ->loadManyToManyCollection($assoc, $entity, $collection);
 
-                                $reflField->setValue($entity, $collection);
+                                $classMetadata->setFieldValue($entity, $assoc['fieldName'], $collection);
                             } else {
-                                $reflField->setValue($entity, new ArrayCollection());
+                                $classMetadata->setFieldValue($entity, $assoc['fieldName'], new ArrayCollection());
                             }
                         }
                     }
-                    $reflField = $classMetadata->reflFields[$field];
-                    \assert(null !== $reflField);
 
-                    $reflField->setValue($entity, $collection);
+                    $classMetadata->setFieldValue($entity, $field, $collection);
                 } elseif (isset($targetClass->associationMappings[$mappedBy])) {
                     $targetAssoc = $targetClass->associationMappings[$mappedBy];
                     $whereId = [$this->config->getRevisionFieldName().' = ?'];
@@ -1123,9 +1106,7 @@ class AuditReader
                         )) {
                         foreach ($targetAssoc['relationToTargetKeyColumns'] as $targetKeyJoinColumn => $targetKeyColumn) {
                             $whereId[] = "{$targetKeyJoinColumn} = ?";
-                            $reflField = $classMetadata->reflFields['id'];
-                            \assert(null !== $reflField);
-                            $values[] = $reflField->getValue($entity);
+                            $values[] = $classMetadata->getFieldValue($entity, 'id');
                         }
 
                         $whereSQL = implode(' AND ', $whereId);
@@ -1172,9 +1153,6 @@ class AuditReader
                             }
                         }
                     } else {
-                        $reflField = $classMetadata->reflFields[$assoc['fieldName']];
-                        \assert(null !== $reflField);
-
                         if ($this->loadNativeCollections) {
                             $collection = new PersistentCollection(
                                 $this->em,
@@ -1185,20 +1163,17 @@ class AuditReader
                             $this->getEntityPersister($assoc['targetEntity'])
                                 ->loadManyToManyCollection($assoc, $entity, $collection);
 
-                            $reflField->setValue($entity, $collection);
+                            $classMetadata->setFieldValue($entity, $assoc['fieldName'], $collection);
                         } else {
-                            $reflField->setValue($entity, new ArrayCollection());
+                            $classMetadata->setFieldValue($entity, $assoc['fieldName'], new ArrayCollection());
                         }
                     }
-                    $reflField = $classMetadata->reflFields[$field];
-                    \assert(null !== $reflField);
-                    $reflField->setValue($entity, $collection);
+
+                    $classMetadata->setFieldValue($entity, $field, $collection);
                 }
             } else {
                 // Inject collection
-                $reflField = $classMetadata->reflFields[$field];
-                \assert(null !== $reflField);
-                $reflField->setValue($entity, new ArrayCollection());
+                $classMetadata->setFieldValue($entity, $field, new ArrayCollection());
             }
         }
 

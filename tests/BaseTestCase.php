@@ -21,7 +21,6 @@ use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\TestCase;
@@ -29,7 +28,7 @@ use Psr\Clock\ClockInterface;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 
-abstract class BaseTest extends TestCase
+abstract class BaseTestCase extends TestCase
 {
     /**
      * @var Connection|null
@@ -96,6 +95,12 @@ abstract class BaseTest extends TestCase
         }
 
         $config = ORMSetup::createAttributeMetadataConfiguration($mappingPaths, true);
+        if (\PHP_VERSION_ID >= 80400) {
+            $config->enableNativeLazyObjects(true);
+        } else {
+            $config->setProxyDir(sys_get_temp_dir());
+            $config->setProxyNamespace('Proxies');
+        }
         $config->setSchemaManagerFactory(new DefaultSchemaManagerFactory());
         $connection = $this->_getConnection($config);
 
@@ -167,7 +172,7 @@ abstract class BaseTest extends TestCase
     {
         $em = $this->getEntityManager();
         $classes = array_map(
-            static fn (string $value): ClassMetadata => $em->getClassMetadata($value),
+            $em->getClassMetadata(...),
             $this->schemaEntities
         );
 
@@ -178,7 +183,7 @@ abstract class BaseTest extends TestCase
     {
         $em = $this->getEntityManager();
         $classes = array_map(
-            static fn (string $value): ClassMetadata => $em->getClassMetadata($value),
+            $em->getClassMetadata(...),
             $this->schemaEntities
         );
 

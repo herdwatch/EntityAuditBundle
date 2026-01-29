@@ -198,14 +198,11 @@ class LogRevisionsListener implements EventSubscriber
                     throw new \RuntimeException('column name not found  for'.$idField);
                 }
 
-                $reflField = $meta->reflFields[$idField];
-                \assert(null !== $reflField);
-                $params[] = $reflField->getValue($entity);
+                $params[] = $meta->getFieldValue($entity, $idField);
 
                 $sql .= ' AND '.$columnName.' = ?';
             }
 
-            /** @psalm-suppress InvalidArgument for doctrine/dbal 3 type can be integer */
             $em->getConnection()->executeQuery($sql, $params, $types);
         }
 
@@ -264,7 +261,7 @@ class LogRevisionsListener implements EventSubscriber
         }
 
         // if we have no changes left => don't create revision log
-        if (empty($changeset)) {
+        if (0 === \count($changeset)) {
             return;
         }
 
@@ -343,9 +340,7 @@ class LogRevisionsListener implements EventSubscriber
         if ($class->isVersioned) {
             $versionField = $class->versionField;
             \assert(null !== $versionField);
-            $reflField = $class->reflFields[$versionField];
-            \assert(null !== $reflField);
-            $data[$versionField] = $reflField->getValue($entity);
+            $data[$versionField] = $class->getFieldValue($entity, $versionField);
         }
 
         return $data;
@@ -362,9 +357,7 @@ class LogRevisionsListener implements EventSubscriber
         $class = $em->getClassMetadata($entity::class);
         foreach ($class->associationMappings as $field => $assoc) {
             if (self::isManyToManyOwningSideMapping($assoc)) {
-                $reflField = $class->reflFields[$field];
-                \assert(null !== $reflField);
-                $data[$field] = $reflField->getValue($entity);
+                $data[$field] = $class->getFieldValue($entity, $field);
             }
         }
 
@@ -392,7 +385,6 @@ class LogRevisionsListener implements EventSubscriber
             /*
              * NEXT_MAJOR: Remove this `if` block, because lastInsertId throws an exception in DBAL 4
              */
-            /** @psalm-suppress TypeDoesNotContainType */
             if (false === $revisionId) { // @phpstan-ignore-line doctrine/dbal 3 lastInsertId() can return false
                 throw new \RuntimeException('Unable to retrieve the last revision id.');
             }
@@ -617,7 +609,7 @@ class LogRevisionsListener implements EventSubscriber
             && $class->name === $class->rootEntityName
             && null !== $class->discriminatorColumn
         ) {
-            $params[] = $entityData[self::getMappingNameValue($class->discriminatorColumn)] ?? $class->discriminatorValue;;
+            $params[] = $entityData[self::getMappingNameValue($class->discriminatorColumn)] ?? $class->discriminatorValue;
             $types[] = self::getMappingValue($class->discriminatorColumn, 'type');
         }
 
@@ -640,7 +632,6 @@ class LogRevisionsListener implements EventSubscriber
             }
         }
 
-        /** @psalm-suppress InvalidArgument for doctrine/dbal 3 type can be integer */
         $conn->executeStatement($this->getInsertRevisionSQL($em, $class), $params, $types);
     }
 
@@ -673,12 +664,9 @@ class LogRevisionsListener implements EventSubscriber
         }
 
         foreach (self::getRelationToTargetKeyColumns($assoc) as $targetColumn) {
-            $reflField = $targetClass->reflFields[$targetClass->fieldNames[$targetColumn]];
-            \assert(null !== $reflField);
-            $joinTableParams[] = $reflField->getValue($relatedEntity);
+            $joinTableParams[] = $targetClass->getFieldValue($relatedEntity, $targetClass->fieldNames[$targetColumn]);
             $joinTableTypes[] = PersisterHelper::getTypeOfColumn($targetColumn, $targetClass, $em);
         }
-        /** @psalm-suppress InvalidArgument for doctrine/dbal 3 type can be integer */
         $conn->executeStatement(
             $this->getInsertJoinTableRevisionSQL($class, $targetClass, $assoc),
             $joinTableParams,
