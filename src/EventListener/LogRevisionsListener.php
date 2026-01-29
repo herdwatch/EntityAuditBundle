@@ -609,7 +609,7 @@ class LogRevisionsListener implements EventSubscriber
             && $class->name === $class->rootEntityName
             && null !== $class->discriminatorColumn
         ) {
-            $params[] = $entityData[self::getMappingNameValue($class->discriminatorColumn)] ?? $class->discriminatorValue;;
+            $params[] = $entityData[self::getMappingNameValue($class->discriminatorColumn)] ?? $class->discriminatorValue;
             $types[] = self::getMappingValue($class->discriminatorColumn, 'type');
         }
 
